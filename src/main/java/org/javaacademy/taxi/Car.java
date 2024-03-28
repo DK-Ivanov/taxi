@@ -2,28 +2,31 @@ package org.javaacademy.taxi;
 
 import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.SneakyThrows;
 import lombok.experimental.FieldDefaults;
 import org.javaacademy.taxi.AssistantClasses.TimeOfDay;
 import org.javaacademy.taxi.AssistantClasses.WrongAddressException;
 import org.javaacademy.taxi.Taxi.TaxiCompany;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
+
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Car {
-    final double NIGHT_RATE;
-    final double DAY_RATE;
+    @Value("${Car.NIGHT_RATE}")
+    double nightRate;
+    @Value("${Car.DAY_RATE}")
+    double dayRate;
     @Getter
     String carNumber;
     @Getter
     double earnedMoney = 0;
+    @Autowired
+    @Lazy
     TaxiCompany company;
 
-    public Car(double NIGHT_RATE, double DAY_RATE, String carNumber, TaxiCompany company) {
-        this.NIGHT_RATE = NIGHT_RATE;
-        this.DAY_RATE = DAY_RATE;
+    public Car(String carNumber) {
         this.carNumber = carNumber;
-        this.company = company;
-
     }
 
     public void takeOrder(Passenger passenger, TimeOfDay time) throws WrongAddressException {
@@ -31,16 +34,16 @@ public class Car {
             case "Березовая роща" -> countMoney(10, time);
             case "Кандикюля" -> countMoney(4, time);
             case "Строитель" -> countMoney(12, time);
-            default -> throw new WrongAddressException();
+            default -> throw new WrongAddressException(passenger.getAddress());
         }
     }
 
     private void countMoney(int distance, TimeOfDay time) {
         double cash;
         if(time.getValue() == 1) {
-            cash = distance * NIGHT_RATE;
+            cash = distance * nightRate;
         } else {
-            cash = distance * DAY_RATE;
+            cash = distance * dayRate;
         }
         this.earnedMoney += cash/2;
         company.setEarnedMoney(company.getEarnedMoney() + cash/2);
